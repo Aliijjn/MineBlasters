@@ -10,4 +10,6 @@ Welcome to MineBlaster, my attempt at making a full, polished 2D game. I've been
 
 ## Videos 📷
 
-![](Videos/Start.mp4)
+### You spawn in an abandoned mine, which you can explore with WASD
+https://github.com/user-attachments/assets/2e4c1ef2-9157-462f-9dcc-9db2b0661544
+
