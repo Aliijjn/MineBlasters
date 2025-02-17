@@ -8,3 +8,6 @@ Welcome to MineBlaster, my attempt at making a full, polished 2D game. I've been
 - How to increase performance using multithreading (800-2000fps!)
 - How to manage a larger code base (~4000 lines)
 
+## Videos 📷
+
+![](Videos/Start.mp4)
