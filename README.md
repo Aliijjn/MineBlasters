@@ -8,6 +8,10 @@ Welcome to MineBlaster, my attempt at making a full, polished 2D game. I've been
 - How to increase performance using multithreading (800-2000fps!)
 - How to manage a larger code base (~4000 lines)
 
+# How to play the game
+- Download the zip file in the repo
+- Unzip the file and enjoy :)
+
 # Videos: 📷
 
 ### You spawn in an abandoned mine, armed with nothing but a revolver and some ammo
