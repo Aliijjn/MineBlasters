@@ -8,9 +8,11 @@ Welcome to MineBlaster, my attempt at making a full, polished 2D game. I've been
 - How to increase performance using multithreading (800-2000fps!)
 - How to manage a larger code base (~4000 lines)
 
-# How to play the game
+# How to play the game 🏃
 - Download the zip file in the repo
 - Unzip the file and enjoy :)
+- You move with `WASD` and shoot with `MOUSE1` or `SPACEBAR`
+- All other essential controls are shown when needed
 
 # Videos: 📷
 
