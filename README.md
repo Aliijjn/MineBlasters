@@ -17,6 +17,7 @@ Welcome to MineBlaster, my attempt at making a full, polished 2D game. I've been
 # Videos: 📷
 
 ** There might be some weird artefacts in the videos, this is because they're compressed to stay under 10MB **
+** These videos show an older build, with worse performance **
 ### You spawn in an abandoned mine, armed with nothing but a revolver and some ammo
 https://github.com/user-attachments/assets/2e4c1ef2-9157-462f-9dcc-9db2b0661544
 
@@ -63,7 +64,7 @@ Look up the values of the 2D array, and place the chunks in a new 2D array, that
 
 ## Map generation examples:
 
-### A basic 2x2 map. One of it's elements got turned into a wall.
+### A basic 2x2 map. One of its elements got turned into a wall.
 ```
 0 1
 0 0
@@ -154,7 +155,7 @@ In a 2D game, the player often gets too much information. This can make a game g
 ### DDA (Raycasting)
 DDA is a great way of effectively casting rays. It takes a while to understand, but it's worth it for sure, as it's extremely fast. Speed is essential for my use case, as I need to check for each pixel of a tile *(32x32)* if the player can see it. There also wouldn't just be one tile, but close to *100* to render in a worst-case scenario. And you don't want to do this once every few seconds, but 60x per second minimum, or around *165x* per second for a smooth experience. This would result in **16,896,000** DDA calls per second!
 
-Even then, the result wouldn't look too good, as the line would look jagged, with there only being only one sample per pixel. To fix this, four rays (samples) are sent out per pixel, which makes the edges appear much smoother.
+Even then, the result wouldn't look too good, as the line would look jagged, with there only being only one sample per pixel. To fix this, four rays (samples) are sent out per pixel, which makes the edges appear much smoother, at the cost of some performance.
 
 ![image](https://github.com/user-attachments/assets/079dd976-16d5-43e4-8043-a26f6dd531eb)
 
@@ -162,11 +163,20 @@ Even then, the result wouldn't look too good, as the line would look jagged, wit
 
 ### Optimising the raycasting
 
-Fortunately, there are a few tricks that you can use to determine whether a tile should be lit. The easiest one of these is to check all corners of a tile, if the player can see all 4 of them, then he should be able to see the whole tile, meaning there's no need to check all pixels of the tile (in blue). 
+Fortunately, there are a few tricks that you can use to determine whether a tile should be lit. The easiest one of these is to check all corners of a tile, if the player can see all 4 of them, then he should be able to see the whole tile, meaning there's no need to check all pixels of the tile.
+![image](https://github.com/user-attachments/assets/c0bcb007-ba0a-461b-a78a-99fc5997ef10)
+
+This already decreases the amount of tiles we need to fully render by about 30%, but we can do better than this.
 ![image](https://github.com/user-attachments/assets/a1834b87-66db-4a4e-8142-6010f0c3c5aa)
 
-However, the same thing isn't true in reverse, as you can still see the middle of a tile, while not seeing any of the corners
-![image](https://github.com/user-attachments/assets/475e3cca-7145-4d1f-bd47-2ddab6c28cde)
+However, the same thing isn't true in reverse, as you can still see the middle of a tile, while not seeing any of the corners.
+![image](https://github.com/user-attachments/assets/615493ca-b8e0-4858-86be-bb99142950ae)
+
+Though, you can check all of the first pixels that are facing the player. This is considerably more expensive, but an O(n) prediction that works 50% of the time is way better than O(n^2).
+![image](https://github.com/user-attachments/assets/d18efbf2-6b7a-4599-86dc-625a9b09571a)
+
+Now that we can properly predict if a tile is fully invisible to the player, we can optimise another ~60% of the tiles
+![image](https://github.com/user-attachments/assets/0cebc5de-b852-485d-889a-61c8db8caa6b)
 
 More coming soon :)
 
