@@ -143,6 +143,11 @@ X . . . . . . . . . . . . . . . . . . X X . . . . . . . . . . . . . . . . X X X
 X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X
 ```
 
+.
+
+.
+
+
 ## Real-Time Lighting
 In a 2D game, the player often gets too much information. This can make a game get boring quickly, as there's no element of surprise. To fix this, I made sure that the player can only see things that the player can actually see. I did this by casting rays between the player and all floor tiles and entities, to see if the player could really see them. If the line hits a wall before reaching the destination, the tile will be rendered with a darker shade and whatever is on top won't get rendered at all. However making this work, and making it run well was easier said than done. 
 
