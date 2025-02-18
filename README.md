@@ -163,19 +163,19 @@ Even then, the result wouldn't look too good, as the line would look jagged, wit
 
 ### Optimising the raycasting
 
-Fortunately, there are a few tricks that you can use to determine whether a tile should be lit. The easiest one of these is to check all corners of a tile, if the player can see all 4 of them, then he should be able to see the whole tile, meaning there's no need to check all pixels of the tile.
+### Fortunately, there are a few tricks that you can use to determine whether a tile should be lit. The easiest one of these is to check all corners of a tile, if the player can see all 4 of them, then he should be able to see the whole tile, meaning there's no need to check all pixels of the tile.
 ![image](https://github.com/user-attachments/assets/c0bcb007-ba0a-461b-a78a-99fc5997ef10)
 
-This already decreases the amount of tiles we need to fully render by about 30%, but we can do better than this.
+### This already decreases the amount of tiles we need to fully render by about 30%, but we can do better than this.
 ![image](https://github.com/user-attachments/assets/a1834b87-66db-4a4e-8142-6010f0c3c5aa)
 
-However, the same thing isn't true in reverse, as you can still see the middle of a tile, while not seeing any of the corners.
+### However, the same thing isn't true in reverse, as you can still see the middle of a tile, while not seeing any of the corners.
 ![image](https://github.com/user-attachments/assets/615493ca-b8e0-4858-86be-bb99142950ae)
 
-Though, you can check all of the first pixels that are facing the player. This is considerably more expensive, but an O(n) prediction that works 50% of the time is way better than O(n^2).
+### Though, you can check all of the first pixels that are facing the player. This is considerably more expensive, but an O(n) prediction that works 50% of the time is way better than O(n^2).
 ![image](https://github.com/user-attachments/assets/d18efbf2-6b7a-4599-86dc-625a9b09571a)
 
-Now that we can properly predict if a tile is fully invisible to the player, we can optimise another ~60% of the tiles
+### Now that we can properly predict if a tile is fully invisible to the player, we can optimise another ~60% of the tiles
 ![image](https://github.com/user-attachments/assets/0cebc5de-b852-485d-889a-61c8db8caa6b)
 
 More coming soon :)
