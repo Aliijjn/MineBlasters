@@ -16,6 +16,7 @@ Welcome to MineBlaster, my attempt at making a full, polished 2D game. I've been
 
 # Videos: 📷
 
+** There might be some weird artefacts in the videos, this is because they're compressed to stay under 10MB **
 ### You spawn in an abandoned mine, armed with nothing but a revolver and some ammo
 https://github.com/user-attachments/assets/2e4c1ef2-9157-462f-9dcc-9db2b0661544
 
