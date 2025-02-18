@@ -142,5 +142,16 @@ X . . . . . . . . . . . . . . . . . . X X . . . . . . . . . . . . . . . . X X X
 X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X
 ```
 
+## Real-Time Lighting
+In a 2D game, the player often gets too much information. This can make a game get boring quickly, as there's no element of surprise. To fix this, I made sure that the player can only see things that the player can actually see. I did this by casting rays between the player and all floor tiles and entities, to see if the player could really see them. If the line hits a wall before reaching the destination, the tile will be rendered with a darker shade and whatever is on top won't get rendered at all. However making this work, and making it run well was easier said than done. 
+
+### DDA (Raycasting)
+DDA is a great way of effectively casting rays. It takes a while to understand, but it's worth it for sure, as it's extremely fast. Speed is essential for my use case, as I need to check for each pixel of a tile *(32x32)* if the player can see it. There also wouldn't just be one tile, but close to *100* to render in a worst-case scenario. And you don't want to do this once every few seconds, but 60x per second minimum, or around *165x* per second for a smooth experience. This would result in **16,896,000** DDA calls per second!
+
+Even then, the result wouldn't look too good, as the line would look jagged, with there only being only one sample per pixel. To fix this, four rays are sent out per pixel, which makes the edges much more smooth.
+
+![image](https://github.com/user-attachments/assets/df125a68-347e-4673-9bbc-c7c9f15ea5d6)
+
+![image](https://github.com/user-attachments/assets/46b22774-b5ef-493c-9889-7a665a430f05)
 
 
