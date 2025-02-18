@@ -23,32 +23,56 @@ static void	renderTile(GameInfo& game, Vec2 pos, Vec2 tilePos, uint16_t val, int
 	}
 }
 
-static bool smartPathFind(GameInfo& game, IVec2 pos, IVec2 dir)
-{
-	// base cases
-	if (game.map[pos.y][pos.x] <= Block::WALL_MAX)
-		return false;
-	if (dir.x == 0 && dir.y == 0)
-		return true;
-	// recursive shenanigans
-	if (dir.x > 0 && smartPathFind(game, { pos.x + 1, pos.y }, { dir.x - 1, dir.y }) == true)
-		return true;
-	if (dir.x < 0 && smartPathFind(game, { pos.x - 1, pos.y }, { dir.x + 1, dir.y }) == true)
-		return true;
-	if (dir.y > 0 && smartPathFind(game, { pos.x, pos.y + 1 }, { dir.x, dir.y - 1 }) == true)
-		return true;
-	if (dir.y < 0 && smartPathFind(game, { pos.x, pos.y - 1 }, { dir.x, dir.y + 1 }) == true)
-		return true;
-	return false;
-}
+//static bool smartPathFind(GameInfo& game, IVec2 pos, IVec2 dir)
+//{
+//	// base cases
+//	if (game.map[pos.y][pos.x] <= Block::WALL_MAX)
+//		return false;
+//	if (dir.x == 0 && dir.y == 0)
+//		return true;
+//	// recursive shenanigans
+//	if (dir.x > 0 && smartPathFind(game, { pos.x + 1, pos.y }, { dir.x - 1, dir.y }) == true)
+//		return true;
+//	if (dir.x < 0 && smartPathFind(game, { pos.x - 1, pos.y }, { dir.x + 1, dir.y }) == true)
+//		return true;
+//	if (dir.y > 0 && smartPathFind(game, { pos.x, pos.y + 1 }, { dir.x, dir.y - 1 }) == true)
+//		return true;
+//	if (dir.y < 0 && smartPathFind(game, { pos.x, pos.y - 1 }, { dir.x, dir.y + 1 }) == true)
+//		return true;
+//	return false;
+//}
+//
+////// checks if a tile cannot be seen because of curves in the map
+//static bool	tileIsFullyHidden(GameInfo& game, Vec2 tile)
+//{
+//	IVec2	playerPos = toIVec2({ game.player.pos.x, game.player.pos.y + Player::eyesOffset });
+//	IVec2	dir = subtractIVec2(toIVec2(tile), playerPos);
+//
+//	return (!smartPathFind(game, playerPos, dir));
+//}
 
-// checks if a tile cannot be seen because of curves in the map
-static bool	tileIsHidden(GameInfo& game, IVec2 tile)
+static bool	tileIsFullyHidden(GameInfo& game, Vec2 tile)
 {
-	IVec2	playerPos = toIVec2({ game.player.pos.x, game.player.pos.y + Player::eyesOffset });
-	IVec2	dir = subtractIVec2(tile, playerPos);
+	static float	offset = 0.99f;
+	static float	stepSize = 1.0f / (1 << game.misc.LOD);
+	Vec2			playerEyes = { game.player.pos.x, game.player.pos.y + Player::eyesOffset };
+	bool			leftOfPlayer  = (int)tile.x < (int)playerEyes.x;
+	bool			rightOfPlayer = (int)tile.x > (int)playerEyes.x;
+	bool			belowPlayer   = (int)tile.y < (int)playerEyes.y;
+	bool			abovePlayer   = (int)tile.y > (int)playerEyes.y;
 
-	return (!smartPathFind(game, playerPos, dir));
+	for (float f = 0; f < 1; f += stepSize)
+	{
+		if (leftOfPlayer  == true && DDA(game, playerEyes, { tile.x + offset, tile.y + f }) == true)
+			return false;
+		if (rightOfPlayer == true && DDA(game, playerEyes, { tile.x, tile.y + f }) == true)
+			return false;
+		if (belowPlayer   == true && DDA(game, playerEyes, { tile.x + f, tile.y + offset }) == true)
+			return false;
+		if (abovePlayer   == true && DDA(game, playerEyes, { tile.x + f, tile.y }) == true)
+			return false;
+	}
+	return true;
 }
 
 static int8_t	checkShade(GameInfo& game, IVec2 index, Vec2 tilePos, float size, int depth)
@@ -89,7 +113,7 @@ static int8_t	checkTiles(GameInfo& game, std::vector<RenderCall>& renderCalls, V
 			renderCalls.push_back({ 4, val, size, pos, tilePos });
 			return -1;
 		}
-		if (tileIsHidden(game, index) == true)
+		if (tileIsFullyHidden(game, toVec2(index)) == true)
 		{
 			renderCalls.push_back({ 0, val, size, pos, tilePos });
 			return -1;

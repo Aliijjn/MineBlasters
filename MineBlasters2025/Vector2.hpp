@@ -79,10 +79,10 @@ Vec2    normaliseVec2Safe(Vec2 a);
 
 Vec2    addVec2(Vec2 a, Vec2 b);
 Vec2    subtractVec2(Vec2 a, Vec2 b);
-Vec2    multiplyVec2(Vec2 a, float scalar = 0);
-Vec2	toVec2(IVec2 cpy, float scalar = 0);
+Vec2    multiplyVec2(Vec2 a, float scalar = 1);
+Vec2	toVec2(IVec2 cpy, float scalar = 1);
 
 IVec2   toIVec2(Vec2 cpy);
 IVec2   addIVec2(IVec2 a, IVec2 b);
 IVec2   subtractIVec2(IVec2 a, IVec2 b);
-IVec2   multiplyIVec2(IVec2 a, float scalar = 0);
+IVec2   multiplyIVec2(IVec2 a, float scalar = 1);

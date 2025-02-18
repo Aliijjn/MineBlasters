@@ -1,5 +1,29 @@
 #include "mineBlasters.hpp"
 
+template <typename T>
+static void	printMap(std::vector<std::vector<T>>& chunks, uint32_t size, bool detailed = true)
+{
+	return;
+	for (auto it : chunks)
+	{
+		for (T i : it)
+		{
+			if (detailed == true)
+			{
+				std::cout << (int)i << " ";
+				if ((int)i < 10)
+					std::cout << "  ";
+				else if ((int)i < 100)
+					std::cout << " ";
+			}
+			else
+				std::cout << (i >= Block::PATH ? "." : "X") << " ";
+		}
+		std::cout << "\n";
+	}
+	std::cout << "\n";
+}
+
 static bool	isValidGrid(const std::vector<std::vector<uint8_t>>& chunks,
 			std::vector<std::vector<bool>>& visited, IVec2 pos, IVec2 end, uint32_t size)
 {
@@ -70,6 +94,7 @@ static void	initGrids(std::vector<std::vector<uint8_t>>& chunks, uint32_t size)
 				}
 			}
 		}
+		printMap(chunks, size, true);
 	} while (isValidGrid(chunks, size) == false);
 }
 
@@ -94,30 +119,6 @@ static void	initConnections(std::vector<std::vector<uint8_t>>& chunks, uint32_t 
 		}
 	}
 	chunks = connections;
-}
-
-template <typename T> 
-static void	printMap(std::vector<std::vector<T>>& chunks, uint32_t size, bool detailed = true)
-{
-	return;
-	for (auto it : chunks)
-	{
-		for (T i : it)
-		{
-			if (detailed == true)
-			{
-				std::cout << (int)i << " ";
-				if ((int)i < 10)
-					std::cout << "  ";
-				else if ((int)i < 100)
-					std::cout << " ";
-			}
-			else
-				std::cout << (i >= Block::PATH ? "." : "X") << " ";
-		}
-		std::cout << "\n";
-	}
-	std::cout << "\n";
 }
 
 uint8_t	checkNeighbors(const std::vector<std::vector<uint16_t>>& map, IVec2 pos, uint32_t size)
@@ -178,7 +179,7 @@ static std::vector<std::vector<uint16_t>>	readChunk(std::ifstream& infile)
 		}
 	}
 	// check for wall orientation
-	printMap(chunk, Chunk::size, true);
+	printMap(chunk, Chunk::size, false);
 	for (int32_t y = 0; y < Chunk::size; y++)
 	{
 		for (int32_t x = 0; x < Chunk::size; x++)
@@ -189,7 +190,7 @@ static std::vector<std::vector<uint16_t>>	readChunk(std::ifstream& infile)
 			}
 		}
 	}
-	printMap(chunk, Chunk::size, true);
+	printMap(chunk, Chunk::size, false);
 	return chunk;
 }
 
@@ -217,11 +218,11 @@ static void	getChunkTable(std::map<uint32_t, std::vector<std::vector<uint16_t>>>
 			exit(1);
 		}
 	}
-	//for (auto it : chunkTable)
-	//{
-	//	std::cout << "map " << it.first << ":\n";
-	//	printMap(it.second, size, true);
-	//}
+	for (auto it : chunkTable)
+	{
+		//std::cout << "map " << it.first << ":\n";
+		printMap(it.second, size, false);
+	}
 }
 
 static void	createFullMap(const std::vector<std::vector<uint8_t>>& chunks,
@@ -283,5 +284,6 @@ std::vector<std::vector<uint16_t>>	initMap(GameInfo& game, uint32_t lvl)
 	getChunkTable(chunkTable, game.misc.isInShop ? "chunks/shop" : "chunks", size, game.misc.isInShop ? 1 : 16);
 	createFullMap(chunks, chunkTable, map, size);
 	checkFullMap(game, map, size);
+	printMap(map, size, false);
 	return map;
 }
