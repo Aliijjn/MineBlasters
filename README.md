@@ -148,10 +148,20 @@ In a 2D game, the player often gets too much information. This can make a game g
 ### DDA (Raycasting)
 DDA is a great way of effectively casting rays. It takes a while to understand, but it's worth it for sure, as it's extremely fast. Speed is essential for my use case, as I need to check for each pixel of a tile *(32x32)* if the player can see it. There also wouldn't just be one tile, but close to *100* to render in a worst-case scenario. And you don't want to do this once every few seconds, but 60x per second minimum, or around *165x* per second for a smooth experience. This would result in **16,896,000** DDA calls per second!
 
-Even then, the result wouldn't look too good, as the line would look jagged, with there only being only one sample per pixel. To fix this, four rays are sent out per pixel, which makes the edges much more smooth.
+Even then, the result wouldn't look too good, as the line would look jagged, with there only being only one sample per pixel. To fix this, four rays (samples) are sent out per pixel, which makes the edges appear much smoother.
 
-![image](https://github.com/user-attachments/assets/df125a68-347e-4673-9bbc-c7c9f15ea5d6)
+![image](https://github.com/user-attachments/assets/079dd976-16d5-43e4-8043-a26f6dd531eb)
 
-![image](https://github.com/user-attachments/assets/46b22774-b5ef-493c-9889-7a665a430f05)
+![image](https://github.com/user-attachments/assets/fc47875e-6871-462c-bd81-313dc94485d5)
+
+### Optimising the raycasting
+
+Fortunately, there are a few tricks that you can use to determine whether a tile should be lit. The easiest one of these is to check all corners of a tile, if the player can see all 4 of them, then he should be able to see the whole tile, meaning there's no need to check all pixels of the tile (in blue). 
+![image](https://github.com/user-attachments/assets/a1834b87-66db-4a4e-8142-6010f0c3c5aa)
+
+However, the same thing isn't true in reverse, as you can still see the middle of a tile, while not seeing any of the corners
+![image](https://github.com/user-attachments/assets/475e3cca-7145-4d1f-bd47-2ddab6c28cde)
+
+More coming soon :)
 
 
