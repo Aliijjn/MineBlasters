@@ -2,19 +2,19 @@
 
 Welcome to MineBlaster, my attempt at making a full, polished 2D game. I've been working on this project for a month (since 15-01-2025)
 
-# What I've learned from this project: ✅
+## What I've learned from this project: ✅
 - How to procedurally generate levels
 - The efficient use of algorithms (DDA, DFS)
 - How to increase performance using multithreading (2000-3000fps!)
 - How to manage a larger code base (~4000 lines)
 
-# How to play the game 🏃
+## How to play the game 🏃
 - Download the zip file in the repo
 - Unzip the file and enjoy :)
 - You move with `WASD` and shoot with `MOUSE1` or `SPACEBAR`
 - All other essential controls are shown when needed
 
-# Videos: 📷
+## Videos: 📷
 
 ** There might be some weird artefacts in the videos, this is because they're compressed to stay under 10MB **
 ** These videos show an older build, with worse performance **
@@ -47,7 +47,7 @@ https://github.com/user-attachments/assets/0d31a399-3d0d-446d-ac51-574363f36056
 
 # Technical specifications: ⚙️
 
-## Map generation:
+## Map generation: 🗺️
 I'm quite proud of how the map generation turned out. Its design is rather simple, but doesn't break immersion and allows for great replayability. Here's the breakdown:
 - **Step 1:**
 Create a 2D grid with the width and height of `levelCount + 1` and fill it with 0's (open areas).
@@ -62,7 +62,7 @@ Load the files from the folder chunks. Each is a unique 20x20 area, with chest a
 - **Step 6:**
 Look up the values of the 2D array, and place the chunks in a new 2D array, that's 20x wider and higher.
 
-## Map generation examples:
+## Map generation examples: 👀
 
 ### A basic 2x2 map. One of its elements got turned into a wall.
 ```
@@ -149,10 +149,10 @@ X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X
 .
 
 
-## Real-Time Lighting
+## Real-Time Lighting: 🔦
 In a 2D game, the player often gets too much information. This can make a game get boring quickly, as there's no element of surprise. To fix this, I made sure that the player can only see things that the player can actually see. I did this by casting rays between the player and all floor tiles and entities, to see if the player could really see them. If the line hits a wall before reaching the destination, the tile will be rendered with a darker shade and whatever is on top won't get rendered at all. However making this work, and making it run well was easier said than done. 
 
-### DDA (Raycasting)
+### Raycasting (DDA)
 DDA is a great way of effectively casting rays. It takes a while to understand, but it's worth it for sure, as it's extremely fast. Speed is essential for my use case, as I need to check for each pixel of a tile *(32x32)* if the player can see it. There also wouldn't just be one tile, but close to *100* to render in a worst-case scenario. And you don't want to do this once every few seconds, but 60x per second minimum, or around *165x* per second for a smooth experience. This would result in **16,896,000** DDA calls per second!
 
 Even then, the result wouldn't look too good, as the line would look jagged, with there only being only one sample per pixel. To fix this, four rays (samples) are sent out per pixel, which makes the edges appear much smoother, at the cost of some performance.
