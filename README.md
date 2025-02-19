@@ -5,7 +5,7 @@ Welcome to MineBlaster, my attempt at making a full, polished 2D game. I've been
 ## What I've learned from this project: ✅
 - How to procedurally generate levels
 - The efficient use of algorithms (DDA, DFS)
-- How to increase performance using multithreading (2000-3000fps!)
+- How to optimise performance and use multithreading (2000-3000fps!)
 - How to manage a larger code base (~4000 lines)
 
 ## How to play the game 🏃
