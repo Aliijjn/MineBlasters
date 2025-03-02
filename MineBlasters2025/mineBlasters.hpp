@@ -121,7 +121,7 @@ namespace GameRules
 {
 	static constexpr int8_t LOD = 5;
 	static constexpr bool	vSync = false;
-	static constexpr bool	cheats = true;
+	static constexpr bool	cheats = false;
 }
 
 namespace Ammo

@@ -161,6 +161,7 @@ static void	initMenus(GameInfo& game)
 
 void	staticInit(GameInfo& game)
 {
+	FreeConsole();
 	getTime(game);
 	initWindow(game);
 	initSprites(game);

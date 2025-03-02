@@ -208,14 +208,14 @@ Image::Image()
 {
     content = nullptr;
     ID = getImageID();
-    std::cout << "+ ID: " << ID << "\n";
+    //std::cout << "+ ID: " << ID << "\n";
 }
 
 Image::Image(std::string path)
 {
     this->Load(path);
     ID = getImageID();
-    std::cout << "+ ID: " << ID << "\n";
+    //std::cout << "+ ID: " << ID << "\n";
 }
 
 void    Image::Load(std::string path)
@@ -273,7 +273,7 @@ Image::~Image()
 {
     delete[] content; //memory leaks :))
     content = nullptr;
-    std::cout << "- ID: " << ID << "\n";
+    //std::cout << "- ID: " << ID << "\n";
 }
 
 bool    rowIsEmpty(const Image& image, int x, int y, int maxY)
