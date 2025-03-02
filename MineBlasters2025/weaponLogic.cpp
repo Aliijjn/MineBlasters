@@ -16,15 +16,15 @@ static void	manageShoot(GameInfo& game)
 	Vec2	pos = game.misc.cursorPos;
 	Vec2	relativePos = normaliseVec2({ pos.x - game.window.vram.x / 2, pos.y - game.window.vram.y / 2 });
 
-	for (int i = 0; i < weapon.ptr->pellets; i++)
+	for (int i = 0; i < weapon.ptr->_pellets; i++)
 	{
-		float	offset = ((float)tRand(weapon.ptr->accuracy * 200) / 100 - weapon.ptr->accuracy) / 100;
+		float	offset = ((float)tRand(weapon.ptr->_accuracy * 200) / 100 - weapon.ptr->_accuracy) / 100;
 		Vec2	randomPos = normaliseVec2({ relativePos.x + offset, relativePos.y + offset });
 
-		game.bullets.push_back(Bullet{ true, weapon.ptr->damage, game.player.pos, multiplyVec2(randomPos, Player::speed * weapon.ptr->velocity), game.misc.MS});
+		game.bullets.push_back(Bullet{ true, weapon.ptr->_damage, game.player.pos, multiplyVec2(randomPos, Player::speed * weapon.ptr->_velocity), game.misc.MS});
 	}
 	weapon.ammo--;
-	fireTimeOut = game.misc.MS + 1000.0 / (weapon.ptr->fireRate / 60.0);
+	fireTimeOut = game.misc.MS + 1000.0 / (weapon.ptr->_fireRate / 60.0);
 	game.stats.shotsFired++;
 }
 
@@ -34,19 +34,21 @@ static void	manageWeaponSwap(GameInfo& game)
 	Weapon&	w2 = game.player.secondary;
 
 	std::swap(w1, w2);
+	if (w1.isReloading == true)
+		w1.isReloading = false;
 }
 
 static void	startReload(GameInfo& game, Weapon& w1, uint16_t& reserveAmmo)
 {
-	if ((w1.ammo == 0 && w1.ptr->reloadType == SPEED_LOADER) || w1.ptr->reloadType == MAGAZINE)
+	if ((w1.ammo == 0 && w1.ptr->_reloadType == SPEED_LOADER) || w1.ptr->_reloadType == MAGAZINE)
 	{
 		w1.isReloading = FULL_RELOAD;
-		w1.reloadEnd = game.misc.MS + w1.ptr->baseReload + w1.ptr->fullReload;
+		w1.reloadEnd = game.misc.MS + w1.ptr->_baseReload + w1.ptr->_fullReload;
 	}
 	else
 	{
 		w1.isReloading = PARTIAL_RELOAD;
-		w1.reloadEnd = game.misc.MS + w1.ptr->baseReload + w1.ptr->singleReload;
+		w1.reloadEnd = game.misc.MS + w1.ptr->_baseReload + w1.ptr->_singleReload;
 	}
 	w1.reloadStart = game.misc.MS;
 }
@@ -55,15 +57,15 @@ static void	endReload(GameInfo& game, Weapon& w1, uint16_t& reserveAmmo)
 {
 	if (w1.isReloading == FULL_RELOAD)
 	{
-		if (w1.ammo + reserveAmmo < w1.ptr->maxAmmo)
+		if (w1.ammo + reserveAmmo < w1.ptr->_capacity)
 		{
 			w1.ammo += reserveAmmo;
 			reserveAmmo = 0;
 		}
 		else
 		{
-			reserveAmmo -= w1.ptr->maxAmmo - w1.ammo;
-			w1.ammo = w1.ptr->maxAmmo;
+			reserveAmmo -= w1.ptr->_capacity - w1.ammo;
+			w1.ammo = w1.ptr->_capacity;
 		}
 		w1.isReloading = NO_RELOAD;
 	}
@@ -71,9 +73,9 @@ static void	endReload(GameInfo& game, Weapon& w1, uint16_t& reserveAmmo)
 	{
 		reserveAmmo--;
 		w1.ammo++;
-		if (reserveAmmo > 0 && w1.ammo < w1.ptr->maxAmmo)
+		if (reserveAmmo > 0 && w1.ammo < w1.ptr->_capacity)
 		{
-			w1.reloadEnd = game.misc.MS + w1.ptr->singleReload;
+			w1.reloadEnd = game.misc.MS + w1.ptr->_singleReload;
 			w1.reloadStart = game.misc.MS;
 		}
 		else
@@ -91,9 +93,9 @@ static void	manageReload(GameInfo& game)
 	{
 		return;
 	}
-	uint16_t& reserveAmmo = game.player.reserveAmmo[w1.ptr->ammoType];
+	uint16_t& reserveAmmo = game.player.reserveAmmo[w1.ptr->_ammoType];
 
-	if (w1.ammo == w1.ptr->maxAmmo || reserveAmmo == 0)
+	if (w1.ammo == w1.ptr->_capacity || reserveAmmo == 0)
 	{
 		return;
 	}
@@ -116,7 +118,7 @@ static void	manageReload(GameInfo& game)
 void	manageWeapons(GameInfo& game)
 {
 	manageReload(game);
-	if (keyPress(VK_SPACE) == true || getLeftMouseClick() == true)
+	if ((keyPress(VK_SPACE) == true || getLeftMouseClick() == true) && game.misc.levelStart + 500 < game.misc.MS)
 		manageShoot(game);
 	if (keyPress('Q', 500) == true)
 		manageWeaponSwap(game);

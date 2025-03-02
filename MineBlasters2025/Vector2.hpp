@@ -80,6 +80,7 @@ Vec2    normaliseVec2Safe(Vec2 a);
 Vec2    addVec2(Vec2 a, Vec2 b);
 Vec2    subtractVec2(Vec2 a, Vec2 b);
 Vec2    multiplyVec2(Vec2 a, float scalar = 1);
+Vec2    divideVec2(Vec2 a, float scalar);
 Vec2	toVec2(IVec2 cpy, float scalar = 1);
 
 IVec2   toIVec2(Vec2 cpy);

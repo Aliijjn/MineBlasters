@@ -69,26 +69,27 @@ void	spitOutItems(GameInfo& game, Vec2 pos, uint16_t type, uint16_t copies, uint
 void	spitOutWeapon(GameInfo& game, Vec2 pos, bool isFancy, StaticWeapon* ptr)
 {
 	DroppedWeapon	d{};
+	int				randomNbr = game.misc.seed + (int)pos.x + (int)pos.y * 3 + game.misc.level * 5;
 
-	std::cout << ptr << "\n";
 	d.pos = pos;
 	d.dir = multiplyVec2(normaliseVec2(subtractVec2(game.player.pos, pos)), Item::speed);
 	d.ptr = ptr;
 	if (ptr == nullptr)
 	{
 		if (isFancy == true)
-			d.ptr = game.weapons.fancy[tRand(game.weapons.fancy.size())];
+			d.ptr = game.weapons.fancy[randomNbr % game.weapons.fancy.size()];
 		else
-			d.ptr = game.weapons.basic[tRand(game.weapons.basic.size())];
+			d.ptr = game.weapons.basic[randomNbr % game.weapons.basic.size()];
 	}
-	std::cout << ptr << "\n";
-	d.ammo = d.ptr->maxAmmo;
+	d.ammo = d.ptr->_capacity;
 
 	game.droppedWeapons.push_back(d);
 }
 
 void	openChest(GameInfo& game, Vec2 itemPos, uint16_t& block)
 {
+	int randomNbr = game.misc.seed + (int)itemPos.x + (int)itemPos.y * 3 + game.misc.level * 5;
+
 	if (block == Block::CHEST1_CLOSED)
 	{
 		spitOutItems(game, itemPos, Item::COIN, 10);
@@ -101,12 +102,12 @@ void	openChest(GameInfo& game, Vec2 itemPos, uint16_t& block)
 	}
 	if (block == Block::CHEST3_CLOSED)
 	{
-		int	i = tRand(Ammo::types);
-		int	j = (i + 1) % 4;
+		int	i = randomNbr % Ammo::types;
+		int	j = (i + 1) % Ammo::types;
 
 		spitOutItems(game, itemPos, Ammo::pool[i].type, 1, Ammo::pool[i].dropCount);
 		spitOutItems(game, itemPos, Ammo::pool[j].type, 1, Ammo::pool[j].dropCount);
-		// spitOutWeapon(game, itemPos, false); // to be removed
+		// spitOutWeapon(game, itemPos, false);
 	}
 	block++; // to CHEST(n)_OPEN
 }
@@ -148,12 +149,14 @@ void	manageInteractables(GameInfo& game, Vec2 newPos, bool pressedE)
 		}
 		else
 		{
-			game.player.bottomPrompt.Add(game, "Press [E] to buy \"" + it->second->name + "\" for 20$", 1, true);
-			if (pressedE && game.player.coinCount >= 20)
+			int	cost = it->second->_price;
+
+			game.player.bottomPrompt.Add(game, "Press [E] to buy \"" + it->second->_name + "\" for " + std::to_string(cost) + "$", 1, true);
+			if (pressedE && game.player.coinCount >= cost)
 			{
 				spitOutWeapon(game, newPos, true, it->second);
 				game.shops.erase(it);
-				game.player.coinCount -= 20;
+				game.player.coinCount -= cost;
 			}
 			else if (pressedE)
 			{
@@ -193,25 +196,34 @@ void	checkNextLevel(GameInfo& game)
 	}
 }
 
-void	manageDeath(GameInfo& game)
-{
-	if (game.player.isAlive == false && keyPress('R') == true)
-	{
-		respawn(game);
-	}
-}
-
 void	gameLogic(GameInfo& game)
 {
 	getTime(game);
-	checkNextLevel(game);
-	manageDeath(game);
-	if (game.player.isFrozen == false)
+	if (keyPress(VK_ESCAPE, 300) == true)
 	{
-		movePlayer(game);
-		manageWeapons(game);
-		checkInteractables(game);
+		if (game.state == GameState::PLAYING)
+			game.state = GameState::PAUSED;
+		else if (game.state == GameState::PAUSED)
+			game.state = GameState::PLAYING;
 	}
-	manageEntities(game);
-	checkLOD(game);
+	if (game.state == GameState::PLAYING)
+	{
+		checkNextLevel(game);
+		if (game.player.isFrozen == false)
+		{
+			movePlayer(game);
+			manageWeapons(game);
+			checkInteractables(game);
+		}
+		manageEntities(game);
+		checkLOD(game);
+	}
+	else
+	{
+		for (SimpleButton& b : game.menus.simpleButtons[game.state])
+		{
+			b.CheckClick(game.misc.cursorPos);
+		}
+	}
+	//std::cout << (int)game.state << "\n";
 }

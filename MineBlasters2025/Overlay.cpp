@@ -47,20 +47,20 @@ void		Overlay::Render(const GameInfo& game)
 				animationStrength = 1.0 - std::min<double>(1.0, std::abs((double)_maxDuration / 2 - currentDuration) / ((double)_maxDuration / 2));
 				break;
 		}
-		drawImage({ 0, 0 }, game.window, &_image, (float)animationStrength * 127.0f);
+		drawImage({ 0, 0 }, game.window, &_image, (float)animationStrength * 255.0f);
 	}
 }
 
-Overlay& Overlay::operator=(const Overlay& cpy)
-{
-	if (this != &cpy)
-	{
-		_fadeType = cpy._fadeType;
-		_start = cpy._start;
-		_maxDuration = cpy._maxDuration;
-		_image = cpy._image;
-	}
-	return *this;
-}
+//Overlay& Overlay::operator=(const Overlay& cpy)
+//{
+//	if (this != &cpy)
+//	{
+//		_fadeType = cpy._fadeType;
+//		_start = cpy._start;
+//		_maxDuration = cpy._maxDuration;
+//		_image = cpy._image;
+//	}
+//	return *this;
+//}
 
 Overlay::~Overlay() {}

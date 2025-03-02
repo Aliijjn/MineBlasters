@@ -52,9 +52,25 @@ void    retrieveInput()
     }
 }
 
-bool    getLeftMouseClick()
+int64_t	getTime()
 {
-    return lMouse;
+    auto	now = std::chrono::system_clock::now();
+    auto	duration = now.time_since_epoch();
+
+    return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+}
+
+bool    getLeftMouseClick(int64_t coolDown)
+{
+    static int64_t  lastClick;
+    int64_t         now = getTime();
+    
+    if (lMouse == false)
+        return false;
+    if (lastClick + coolDown > now)
+        return false;
+    lastClick = now;
+    return true;
 }
 
 bool    getRightMouseClick()
@@ -65,14 +81,6 @@ bool    getRightMouseClick()
 bool    keyPress(char key)
 {
     return GetKeyState(key) & 0x80;
-}
-
-int64_t	getTime()
-{
-    auto	now = std::chrono::system_clock::now();
-    auto	duration = now.time_since_epoch();
-
-    return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 }
 
 bool    keyPress(char key, int64_t coolDownMS)
@@ -190,14 +198,24 @@ static void    bindTexture(Image* texture)
     glGenerateMipmap(GL_TEXTURE_2D);
 }
 
+int     getImageID()
+{
+    static int i;
+    return i++;
+}
+
 Image::Image()
 {
     content = nullptr;
+    ID = getImageID();
+    std::cout << "+ ID: " << ID << "\n";
 }
 
 Image::Image(std::string path)
 {
     this->Load(path);
+    ID = getImageID();
+    std::cout << "+ ID: " << ID << "\n";
 }
 
 void    Image::Load(std::string path)
@@ -238,23 +256,24 @@ void    Image::Load(std::string path)
     bindTexture(this);
 }
 
-Image& Image::operator=(const Image& cpy)
-{
-    if (this != &cpy)
-    {
-        delete[] content;
-        size = cpy.size;
-        content = new Pixel[size.x * size.y];
-        std::copy(cpy.content, cpy.content + (size.x * size.y), content);
-        GLindex = cpy.GLindex;
-    }
-    return *this;
-}
+//Image& Image::operator=(const Image& cpy)
+//{
+//    if (this != &cpy)
+//    {
+//        delete[] content;
+//        size = cpy.size;
+//        content = new Pixel[size.x * size.y];
+//        std::copy(cpy.content, cpy.content + (size.x * size.y), content);
+//        GLindex = cpy.GLindex;
+//    }
+//    return *this;
+//}
 
 Image::~Image()
 {
-    //delete[] content; //memory leaks :))
+    delete[] content; //memory leaks :))
     content = nullptr;
+    std::cout << "- ID: " << ID << "\n";
 }
 
 bool    rowIsEmpty(const Image& image, int x, int y, int maxY)
@@ -269,10 +288,8 @@ bool    rowIsEmpty(const Image& image, int x, int y, int maxY)
     return true;
 }
 
-Font    loadFont(std::string path)
+void    loadFont(Font& font, std::string path)
 {
-    Font    font;
-
     font.image.Load(path);
     font.charSize = { font.image.size.x / 16, font.image.size.y / 8 };
     for (int i = 0; i < 128; i++)
@@ -285,7 +302,22 @@ Font    loadFont(std::string path)
         font.sizes[i] = x;
     }
     font.sizes[' '] = font.charSize.x / 4;
-    return font;
+}
+
+//--------------------------------- ^^^ init ^^^ ----------------------------------
+
+void    drawRectange(Vec2 pos, Vec2 size, WindowInfo windowInfo, Pixel colour)
+{
+    glDisable(GL_TEXTURE_2D);
+    glBegin(GL_QUADS);
+        glColor4ub(colour.r, colour.g, colour.b, colour.a);
+            glVertex2f(posToOpenGL(pos.x, windowInfo.vram.x),          posToOpenGL(pos.y, windowInfo.vram.y));
+            glVertex2f(posToOpenGL(pos.x, windowInfo.vram.x),          posToOpenGL(pos.y + size.y, windowInfo.vram.y));
+            glVertex2f(posToOpenGL(pos.x + size.x, windowInfo.vram.x), posToOpenGL(pos.y + size.y, windowInfo.vram.y));
+            glVertex2f(posToOpenGL(pos.x + size.x, windowInfo.vram.x), posToOpenGL(pos.y, windowInfo.vram.y));
+        glColor4ub(255, 255, 255, 255);
+    glEnd();
+    glEnable(GL_TEXTURE_2D);
 }
 
 void    drawImage(Vec2 pos, WindowInfo windowInfo, Image* image, bool flipped)
@@ -295,14 +327,14 @@ void    drawImage(Vec2 pos, WindowInfo windowInfo, Image* image, bool flipped)
 
     glBindTexture(GL_TEXTURE_2D, image->GLindex);
     glBegin(GL_QUADS);
-    glTexCoord2f(0, 0);
-    glVertex2f(posToOpenGL(startX, windowInfo.vram.x), posToOpenGL(pos.y, windowInfo.vram.y));
-    glTexCoord2f(0, 1);
-    glVertex2f(posToOpenGL(startX, windowInfo.vram.x), posToOpenGL(pos.y + image->size.y, windowInfo.vram.y));
-    glTexCoord2f(1, 1);
-    glVertex2f(posToOpenGL(endX, windowInfo.vram.x), posToOpenGL(pos.y + image->size.y, windowInfo.vram.y));
-    glTexCoord2f(1, 0);
-    glVertex2f(posToOpenGL(endX, windowInfo.vram.x), posToOpenGL(pos.y, windowInfo.vram.y));;
+        glTexCoord2f(0, 0);
+        glVertex2f(posToOpenGL(startX, windowInfo.vram.x), posToOpenGL(pos.y, windowInfo.vram.y));
+        glTexCoord2f(0, 1);
+        glVertex2f(posToOpenGL(startX, windowInfo.vram.x), posToOpenGL(pos.y + image->size.y, windowInfo.vram.y));
+        glTexCoord2f(1, 1);
+        glVertex2f(posToOpenGL(endX, windowInfo.vram.x), posToOpenGL(pos.y + image->size.y, windowInfo.vram.y));
+        glTexCoord2f(1, 0);
+        glVertex2f(posToOpenGL(endX, windowInfo.vram.x), posToOpenGL(pos.y, windowInfo.vram.y));;
     glEnd();
 }
 
@@ -314,14 +346,14 @@ void    drawImage(Vec2 pos, Vec2 tilePos, float size, WindowInfo windowInfo, Ima
     glBindTexture(GL_TEXTURE_2D, image->GLindex);
     glBegin(GL_QUADS);
     glColor3b(colour, colour, colour);
-    glTexCoord2f(tilePos.x, tilePos.y);
-    glVertex2f(posToOpenGL(startX, windowInfo.vram.x), posToOpenGL(pos.y, windowInfo.vram.y));
-    glTexCoord2f(tilePos.x, tilePos.y + size);
-    glVertex2f(posToOpenGL(startX, windowInfo.vram.x), posToOpenGL(pos.y + size * image->size.y, windowInfo.vram.y));
-    glTexCoord2f(tilePos.x + size, tilePos.y + size);
-    glVertex2f(posToOpenGL(endX, windowInfo.vram.x), posToOpenGL(pos.y + size * image->size.y, windowInfo.vram.y));
-    glTexCoord2f(tilePos.x + size, tilePos.y);
-    glVertex2f(posToOpenGL(endX, windowInfo.vram.x), posToOpenGL(pos.y, windowInfo.vram.y));
+        glTexCoord2f(tilePos.x, tilePos.y);
+        glVertex2f(posToOpenGL(startX, windowInfo.vram.x), posToOpenGL(pos.y, windowInfo.vram.y));
+        glTexCoord2f(tilePos.x, tilePos.y + size);
+        glVertex2f(posToOpenGL(startX, windowInfo.vram.x), posToOpenGL(pos.y + size * image->size.y, windowInfo.vram.y));
+        glTexCoord2f(tilePos.x + size, tilePos.y + size);
+        glVertex2f(posToOpenGL(endX, windowInfo.vram.x), posToOpenGL(pos.y + size * image->size.y, windowInfo.vram.y));
+        glTexCoord2f(tilePos.x + size, tilePos.y);
+        glVertex2f(posToOpenGL(endX, windowInfo.vram.x), posToOpenGL(pos.y, windowInfo.vram.y));
     glColor3b(127, 127, 127);
     glEnd();
 }
@@ -331,20 +363,18 @@ void    drawImage(Vec2 pos, WindowInfo windowInfo, Image* image, float transpare
     float   startX = pos.x;
     float   endX = pos.x + image->size.x;
 
-    glColor4b(127, 127, 127, transparency);
+    glColor4ub(255, 255, 255, transparency);
     glBindTexture(GL_TEXTURE_2D, image->GLindex);
     glBegin(GL_QUADS);
-
-    glTexCoord2f(0, 0);
-    glVertex2f(posToOpenGL(startX, windowInfo.vram.x), posToOpenGL(pos.y, windowInfo.vram.y));
-    glTexCoord2f(0, 1);
-    glVertex2f(posToOpenGL(startX, windowInfo.vram.x), posToOpenGL(pos.y + image->size.y, windowInfo.vram.y));
-    glTexCoord2f(1, 1);
-    glVertex2f(posToOpenGL(endX, windowInfo.vram.x), posToOpenGL(pos.y + image->size.y, windowInfo.vram.y));
-    glTexCoord2f(1, 0);
-    glVertex2f(posToOpenGL(endX, windowInfo.vram.x), posToOpenGL(pos.y, windowInfo.vram.y));;
-    
-    glColor4b(127, 127, 127, 127);
+        glTexCoord2f(0, 0);
+        glVertex2f(posToOpenGL(startX, windowInfo.vram.x), posToOpenGL(pos.y, windowInfo.vram.y));
+        glTexCoord2f(0, 1);
+        glVertex2f(posToOpenGL(startX, windowInfo.vram.x), posToOpenGL(pos.y + image->size.y, windowInfo.vram.y));
+        glTexCoord2f(1, 1);
+        glVertex2f(posToOpenGL(endX, windowInfo.vram.x), posToOpenGL(pos.y + image->size.y, windowInfo.vram.y));
+        glTexCoord2f(1, 0);
+        glVertex2f(posToOpenGL(endX, windowInfo.vram.x), posToOpenGL(pos.y, windowInfo.vram.y));
+    glColor4ub(255, 255, 255, 255);
     glEnd();
 }
 
@@ -354,23 +384,31 @@ static void    drawChar(const Font& font, WindowInfo windowInfo, Vec2 pos, Vec2 
     glColor4b(127, 127, 127, transparency);
     glBegin(GL_QUADS);
 
-    glTexCoord2f(charPos.x, charPos.y);
-    glVertex2f(posToOpenGL(pos.x, windowInfo.vram.x), posToOpenGL(pos.y, windowInfo.vram.y));
-    glTexCoord2f(charPos.x, charPos.y + charSize.y);
-    glVertex2f(posToOpenGL(pos.x, windowInfo.vram.x), posToOpenGL(pos.y + font.image.size.y * charSize.y, windowInfo.vram.y));
-    glTexCoord2f(charPos.x + charSize.x, charPos.y + charSize.y);
-    glVertex2f(posToOpenGL(pos.x + font.image.size.x * charSize.x, windowInfo.vram.x), posToOpenGL(pos.y + font.image.size.y * charSize.y, windowInfo.vram.y));
-    glTexCoord2f(charPos.x + charSize.x, charPos.y);
-    glVertex2f(posToOpenGL(pos.x + font.image.size.x * charSize.x, windowInfo.vram.x), posToOpenGL(pos.y, windowInfo.vram.y));;
+        glTexCoord2f(charPos.x, charPos.y);
+        glVertex2f(posToOpenGL(pos.x, windowInfo.vram.x), posToOpenGL(pos.y, windowInfo.vram.y));
+        glTexCoord2f(charPos.x, charPos.y + charSize.y);
+        glVertex2f(posToOpenGL(pos.x, windowInfo.vram.x), posToOpenGL(pos.y + font.image.size.y * charSize.y, windowInfo.vram.y));
+        glTexCoord2f(charPos.x + charSize.x, charPos.y + charSize.y);
+        glVertex2f(posToOpenGL(pos.x + font.image.size.x * charSize.x, windowInfo.vram.x), posToOpenGL(pos.y + font.image.size.y * charSize.y, windowInfo.vram.y));
+        glTexCoord2f(charPos.x + charSize.x, charPos.y);
+        glVertex2f(posToOpenGL(pos.x + font.image.size.x * charSize.x, windowInfo.vram.x), posToOpenGL(pos.y, windowInfo.vram.y));;
    
     glColor4b(127, 127, 127, 127);
     glEnd();
 
 }
 
+static void    getCharLen(const Font& font, float& len, char c)
+{
+    if (c == '\t')
+        len = (int)(len / 20) * 20 + 20;
+    else
+        len += font.sizes[c] + 1;
+}
+
 int    drawString(const Font& font, WindowInfo windowInfo, Vec2 pos, std::string str, float transparency)
 {
-    int len = 0;
+    float len = 0;
 
     for (char c : str)
     {
@@ -384,106 +422,40 @@ int    drawString(const Font& font, WindowInfo windowInfo, Vec2 pos, std::string
             (float)font.sizes[c] / font.image.size.x,
             (float)font.charSize.y / font.image.size.y
         };
-        drawChar(font, windowInfo, { pos.x + len, pos.y }, charPos, charSize, transparency);
-        len += font.sizes[c] + font.charSize.x / 8;
+        drawChar(font, windowInfo, { pos.x + len, pos.y - 1 }, charPos, charSize, transparency);
+        getCharLen(font, len, c);
     }
     return len;
 }
 
-int    drawString(const Font& font, WindowInfo windowInfo, Vec2 pos, std::string str, Font::Align alignment, float transparency)
+int    drawString(const Font& font, WindowInfo windowInfo, Vec2 pos, std::string str, Font::Align alignX, Font::Align alignY, float transparency)
 {
-    int len = 0;
+    float   len = 0;
+    float   height = 1;
 
-    if (alignment != Font::Align::LEFT)
+    if (alignX != Font::Align::LEFT)
     {
         for (char c : str)
         {
-            len += font.sizes[c] + font.charSize.x / 8;
+            getCharLen(font, len, c);
         }
     }
-    if (alignment == Font::Align::CENTRE)
+    if (alignX == Font::Align::CENTRE)
     {
         len /= 2;
     }
-    return drawString(font, windowInfo, { pos.x - len, pos.y }, str, transparency);
+    if (alignY == Font::Align::CENTRE)
+    {
+        height += font.charSize.y / 2;
+    }
+    else if (alignY == Font::Align::BOTTOM)
+    {
+        height += font.charSize.y;
+    }
+    return drawString(font, windowInfo, { pos.x - len, pos.y - height }, str, transparency);
 }
 
 void    renderFrame()
 {
     SwapBuffers(WindowDC);
 }
-
-//static Image open32BitBMP(std::string fileName)
-//{
-//    Image       image;
-//    HANDLE      file;
-//    std::string header("\0", (int)BMP::HEADER_MAX_SIZE);
-//    char* buffer;
-//    uint32_t    fileSize;
-//    uint32_t    endOfHeader;
-//
-//    file = CreateFileA(fileName.c_str(), GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-//    if (file == INVALID_HANDLE_VALUE)
-//    {
-//        MessageBoxA(0, ("Couldn't open " + fileName).c_str(), "Error opening file", MB_OK);
-//        return { nullptr, { 0, 0 }, 0 };
-//    }
-//    ReadFile(file, (LPVOID)header.c_str(), BMP::HEADER_MAX_SIZE, 0, 0);
-//    fileSize = *(uint32_t*)(header.c_str() + BMP::FILE_SIZE);
-//    endOfHeader = *(uint32_t*)(header.c_str() + BMP::HEADER_OFFSET);
-//    image.size.x = *(uint32_t*)(header.c_str() + BMP::IMAGE_X_SIZE);
-//    image.size.y = *(uint32_t*)(header.c_str() + BMP::IMAGE_Y_SIZE);
-//    SetFilePointer(file, endOfHeader, 0, 0);
-//    image.content = new Pixel[(fileSize - endOfHeader) / 4];
-//    buffer = new char[fileSize];
-//    ReadFile(file, buffer, fileSize, 0, 0);
-//    for (int i = 0; i < (fileSize - endOfHeader) / 4; i++)
-//    {
-//        image.content[i].b = buffer[i * 4 + 0];
-//        image.content[i].g = buffer[i * 4 + 1];
-//        image.content[i].r = buffer[i * 4 + 2];
-//        image.content[i].a = buffer[i * 4 + 3];
-//    }
-//    CloseHandle(file);
-//    delete[] buffer;
-//    return (image);
-//}
-//
-//Image   loadImage(std::string path)
-//{
-//    Image image = open32BitBMP(path);
-//
-//    loadTexture(&image);
-//    return image;
-//}
-//
-//bool    rowIsEmpty(const Image& image, int x, int y, int maxY)
-//{
-//    for (int y2 = 0; y2 < maxY; y2++)
-//    {
-//        if (*(uint32_t*)&image.content[x + (y + y2) * image.size.x] != 0)
-//        {
-//            return false;
-//        }
-//    }
-//    return true;
-//}
-//
-//Font    loadFont(std::string path, IVec2 charSize)
-//{
-//    Font    font;
-//
-//    font.image = loadImage(path);
-//    font.charSize = { font.image.size.x / 16, font.image.size.y / 8 };
-//    for (int i = 0; i < 128; i++)
-//    {
-//        int x = 0;
-//        while (x < charSize.x && rowIsEmpty(font.image, i % 16 * charSize.x + x, (7 - i / 16) * charSize.y, charSize.y) == false)
-//        {
-//            x++;
-//        }
-//        font.sizes[i] = x;
-//    }
-//    font.sizes[' '] = charSize.x / 4;
-//    return font;
-//}

@@ -62,7 +62,7 @@ void	TextPopUp::CheckAndRender(GameInfo& game)
 			transparancy = 127.0f - ((float)(game.misc.MS - _creation) / _text[0].upTime) * 127.0f;
 			newPos.y += _riseWithTime * (game.misc.MS - _creation);
 		}
-		drawString(*_font, game.window, newPos, _text[0].str, Font::Align::CENTRE, transparancy);
+		drawString(*_font, game.window, newPos, _text[0].str, Font::Align::CENTRE, Font::Align::TOP, transparancy);
 	}
 }
 

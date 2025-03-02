@@ -23,7 +23,7 @@ class Overlay
 		void		StartNow(const GameInfo& game);
 		void		Stop();
 		void		Render(const GameInfo& game);
-		Overlay&	operator=(const Overlay& cpy);
+		//Overlay&	operator=(const Overlay& cpy);
 		~Overlay();
 
 		Fade	_fadeType = Fade::INCREMENTS;

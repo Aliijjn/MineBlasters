@@ -109,6 +109,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -126,24 +127,29 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Button.cpp" />
     <ClCompile Include="entityLogic.cpp" />
     <ClCompile Include="gameLogic.cpp" />
     <ClCompile Include="graphics.cpp" />
     <ClCompile Include="init.cpp" />
     <ClCompile Include="initMap.cpp" />
+    <ClCompile Include="saveAndLoad.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Overlay.cpp" />
     <ClCompile Include="render.cpp" />
     <ClCompile Include="renderGrid.cpp" />
+    <ClCompile Include="staticInit.cpp" />
     <ClCompile Include="TextPrompt.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="Vector2.cpp" />
     <ClCompile Include="weaponLogic.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Button.hpp" />
     <ClInclude Include="graphics.hpp" />
     <ClInclude Include="mineBlasters.hpp" />
     <ClInclude Include="Overlay.hpp" />

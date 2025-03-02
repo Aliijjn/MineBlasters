@@ -67,7 +67,12 @@ Vec2    multiplyVec2(Vec2 a, float scalar)
 	return { a.x * scalar, a.y * scalar };
 }
 
-
+Vec2    divideVec2(Vec2 a, float scalar)
+{
+	if (scalar == 0.0f)
+		return { 0, 0 };
+	return { a.x / scalar, a.y / scalar };
+}
 
 IVec2    addIVec2(IVec2 a, IVec2 b)
 {

@@ -48,18 +48,19 @@ class Image
         Image();
         Image(std::string path);
         void    Load(std::string path);
-        Image&  operator=(const Image& cpy);
+        //Image&  operator=(const Image& cpy);
         ~Image();
         Pixel*      content = nullptr;
         IVec2       size = {0, 0};
         uint32_t    GLindex = 0;
+        int         ID;
 };
 
 struct Font
 {
     enum class Align : uint8_t
     {
-        LEFT, CENTRE, RIGHT
+        LEFT, CENTRE, RIGHT, TOP, BOTTOM
     };
     Image   image;
     IVec2   charSize;
@@ -71,18 +72,20 @@ void    closeWindow();
 void    errorBox(std::string title, std::string body);
 void    renderFrame();
 void    retrieveInput();
-bool    getLeftMouseClick();
+bool    getLeftMouseClick(int64_t coolDown = 0);
 bool    getRightMouseClick();
 bool    keyPress(char key);
 bool    keyPress(char key, int64_t coolDownMS);
 Vec2    getCursorPos(WindowInfo& windowInfo);
 
-// Images
+// Draw
+void    drawRectange(Vec2 pos, Vec2 size, WindowInfo windowInfo, Pixel colour);
+
 void    drawImage(Vec2 pos, WindowInfo windowInfo, Image* image, bool flipped = false);
 void    drawImage(Vec2 pos, Vec2 tilePos, float size, WindowInfo windowInfo, Image* image, uint8_t colour);
 void    drawImage(Vec2 pos, WindowInfo windowInfo, Image* image, float transparency);
 
 // Fonts
-Font    loadFont(std::string path);
+void    loadFont(Font& font, std::string path);
 int     drawString(const Font& font, WindowInfo windowInfo, Vec2 pos, std::string str, float transparency = 127.0f);
-int     drawString(const Font& font, WindowInfo windowInfo, Vec2 pos, std::string str, Font::Align alignment, float transparency = 127.0f);
+int     drawString(const Font& font, WindowInfo windowInfo, Vec2 pos, std::string str, Font::Align alignX, Font::Align alignY =  Font::Align::TOP, float transparency = 127.0f);

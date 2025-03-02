@@ -5,7 +5,7 @@ void	loop(GameInfo& game)
 	uint64_t	ticks = getTicks();
 	uint64_t	currentTicks;
 
-	while (1)
+	while (game.state != GameState::EXIT_GAME)
 	{
 		retrieveInput();
 		game.misc.cursorPos = getCursorPos(game.window);
@@ -29,4 +29,6 @@ int main()
 	staticInit(game);
 	loop(game);
 	cleanUp(game);
+
+	return 0;
 }

@@ -66,7 +66,7 @@ static bool	isValidGrid(const std::vector<std::vector<uint8_t>>& chunks, uint32_
 	return true;
 }
 
-static void	initGrids(std::vector<std::vector<uint8_t>>& chunks, uint32_t size)
+static void	initGrids(std::vector<std::vector<uint8_t>>& chunks, uint32_t size, int32_t randNbr)
 {
 	const uint32_t	wallcount = ((float)(size * size)) * Chunk::wallOdds;
 
@@ -83,7 +83,7 @@ static void	initGrids(std::vector<std::vector<uint8_t>>& chunks, uint32_t size)
 		{
 			while (1)
 			{
-				IVec2	wall = { tRand(size), tRand(size) };
+				IVec2	wall = { randNbr % size, (randNbr / 3) % size };
 
 				if (((wall.x == 0 && wall.y == 0) ||
 					(wall.x == size - 1 && wall.y == size - 1) ||
@@ -92,6 +92,7 @@ static void	initGrids(std::vector<std::vector<uint8_t>>& chunks, uint32_t size)
 					chunks[wall.y][wall.x] = 1;
 					break;
 				}
+				randNbr = std::abs((randNbr * 2'544'761) % 1'000'001); //random enough
 			}
 		}
 		printMap(chunks, size, true);
@@ -137,7 +138,7 @@ uint8_t	checkNeighbors(const std::vector<std::vector<uint16_t>>& map, IVec2 pos,
 	return result;
 }
 
-static std::vector<std::vector<uint16_t>>	readChunk(std::ifstream& infile)
+static std::vector<std::vector<uint16_t>>	readChunk(std::ifstream& infile, int32_t randNbr)
 {
 	std::vector<std::vector<uint16_t>>	chunk(Chunk::size, std::vector<uint16_t>(Chunk::size));
 	std::string							line;
@@ -165,7 +166,7 @@ static std::vector<std::vector<uint16_t>>	readChunk(std::ifstream& infile)
 			else if (line[x] == 'c')
 				chunk[y][x] = Block::CHEST3_CLOSED;
 			else if (line[x] == 'C')
-				chunk[y][x] = tRand(10) < 7 ? Block::CHEST2_CLOSED : Block::CHEST1_CLOSED;
+				chunk[y][x] = (randNbr % 10) < 7 ? Block::CHEST2_CLOSED : Block::CHEST1_CLOSED;
 			else if (line[x] == 'z')
 				chunk[y][x] = Block::ZOMBIE_SPAWN;
 			else if (line[x] == 'E')
@@ -194,7 +195,7 @@ static std::vector<std::vector<uint16_t>>	readChunk(std::ifstream& infile)
 	return chunk;
 }
 
-static void	getChunkTable(std::map<uint32_t, std::vector<std::vector<uint16_t>>>& chunkTable, std::string folder, uint32_t size, uint32_t count)
+static void	getChunkTable(std::map<uint32_t, std::vector<std::vector<uint16_t>>>& chunkTable, std::string folder, uint32_t size, uint32_t count, int32_t randNbr)
 {
 	std::string		fileName;
 	std::ifstream	infile;
@@ -209,7 +210,7 @@ static void	getChunkTable(std::map<uint32_t, std::vector<std::vector<uint16_t>>>
 			{
 				throw std::exception("Couldn't open file");
 			}
-			chunkTable.emplace(i, readChunk(infile));
+			chunkTable.emplace(i, readChunk(infile, randNbr));
 			infile.close();
 		}
 		catch (std::exception e)
@@ -266,10 +267,24 @@ void	checkFullMap(GameInfo& game, std::vector<std::vector<uint16_t>>& map, uint3
 			}
 			if (map[y][x] == Block::SHOP)
 			{
-				game.shops.emplace(IVec2{ x, y }, game.weapons.fancy[tRand(game.weapons.fancy.size())]);
+				game.shops.emplace(IVec2{ x, y }, game.weapons.fancy[(game.misc.seed + x + y * game.misc.level) % game.weapons.fancy.size()]);
 			}
 		}
 	}
+}
+
+// hacky fix, should be done in a cleaner way later
+void	resetCWD()
+{
+	namespace fs = std::filesystem;
+
+	std::string	CWD = fs::current_path().string();
+
+	if (CWD.substr(CWD.size() - 6) == "\\saves")
+	{
+		CWD.erase(CWD.size() - 6, 6);
+	}
+	fs::current_path(CWD);
 }
 
 std::vector<std::vector<uint16_t>>	initMap(GameInfo& game, uint32_t lvl)
@@ -279,9 +294,11 @@ std::vector<std::vector<uint16_t>>	initMap(GameInfo& game, uint32_t lvl)
 	std::map<uint32_t, std::vector<std::vector<uint16_t>>>	chunkTable;
 	std::vector<std::vector<uint16_t>>						map(size * Chunk::size, std::vector<uint16_t>(size * Chunk::size));
 
-	initGrids(chunks, size);
+
+	resetCWD();
+	initGrids(chunks, size, game.misc.seed);
 	initConnections(chunks, size);
-	getChunkTable(chunkTable, game.misc.isInShop ? "chunks/shop" : "chunks", size, game.misc.isInShop ? 1 : 16);
+	getChunkTable(chunkTable, game.misc.isInShop ? "chunks/shop" : "chunks", size, game.misc.isInShop ? 1 : 16, game.misc.seed);
 	createFullMap(chunks, chunkTable, map, size);
 	checkFullMap(game, map, size);
 	printMap(map, size, false);

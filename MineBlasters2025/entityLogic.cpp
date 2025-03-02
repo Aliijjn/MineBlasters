@@ -98,7 +98,7 @@ void	manageMiscEntities(GameInfo& game)
 		manageEntity(game, d.pos, d.dir);
 		if (dotProduct(d.pos, game.player.pos, 1.5f) == false)
 		{
-			game.player.bottomPrompt.Add(game, "Press [F] for \"" + d.ptr->name + "\"", 1, true);
+			game.player.bottomPrompt.Add(game, "Press [F] for \"" + d.ptr->_name + "\"", 1, true);
 			if (keyPress('F', 300) == true)
 			{
 				pickupWeapon(game, i);
@@ -200,9 +200,7 @@ void	manageEnemies(GameInfo& game)
 			game.player.health -= entity.ptr->damage;
 			if (game.player.health <= 0)
 			{
-				game.player.isAlive = false;
-				game.player.isFrozen = true;
-				game.sprites.overlays[Sprites::DEATH].StartNow(game);
+				game.state = GameState::DEAD;
 				game.stats.timeOfDeath = game.misc.MS;
 			}
 			else

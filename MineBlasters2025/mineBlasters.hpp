@@ -12,6 +12,7 @@
 #include <future>
 #include <fstream>
 #include <iostream>
+#include <filesystem>
 
 #include <math.h>
 #include <time.h>
@@ -22,10 +23,11 @@
 
 #include <gl/GL.h>
 
-#include "graphics.hpp"
+#include "Button.hpp"
 #include "Vector2.hpp"
-#include "TextPrompt.hpp"
 #include "Overlay.hpp"
+#include "graphics.hpp"
+#include "TextPrompt.hpp"
 
 struct Ray
 {
@@ -119,7 +121,7 @@ namespace GameRules
 {
 	static constexpr int8_t LOD = 5;
 	static constexpr bool	vSync = false;
-	static constexpr bool	cheats = false;
+	static constexpr bool	cheats = true;
 }
 
 namespace Ammo
@@ -149,16 +151,35 @@ enum
 	FULL_RELOAD
 };
 
-struct StaticWeapon
+enum GameState
 {
-	std::string	name;
+	MENU,
+	CHARACTER_SELECT,
+	PLAYING,
+	PAUSED,
+	DEAD,
+	EXIT_GAME,
+	MAX
+};
 
-	bool		isFancy;
-	uint8_t		ammoType, reloadType, pellets;
-	uint16_t	maxAmmo;
-	float		damage, fireRate, velocity, accuracy;
-	int64_t		baseReload, singleReload, fullReload;
-	Image		sprite, spriteUI;
+class StaticWeapon
+{
+	public:
+		std::string	_name;
+		int16_t		_price;
+
+		uint8_t		_ammoType, _reloadType, _pellets;
+		uint16_t	_capacity;
+		float		_damage, _fireRate, _velocity, _accuracy;
+		int64_t		_baseReload, _singleReload, _fullReload;
+		Image		_sprite, _spriteUI;
+
+		StaticWeapon(std::string name, int16_t price, uint8_t ammoType, uint8_t reloadType, uint8_t pellets, uint16_t capacity, float damage, float fireRate, float velocity, float accuracy, int64_t baseReload, int64_t singleReload, int64_t fullReload, std::string spritePath, std::string spriteUIPath)
+			: _name(name), _price(price), _ammoType(ammoType), _reloadType(reloadType), _pellets(pellets), _capacity(capacity), _damage(damage), _fireRate(fireRate), _velocity(velocity), _accuracy(accuracy), _baseReload(baseReload), _singleReload(singleReload), _fullReload(fullReload)
+		{
+			_sprite.Load(spritePath);
+			_spriteUI.Load(spriteUIPath);
+		}
 };
 
 struct DroppedWeapon
@@ -214,17 +235,25 @@ struct Entity
 	StaticEntity*	ptr;
 };
 
+struct StartOptions
+{
+	static constexpr int	MAX = 4;
+	std::string				name;
+	StaticWeapon*			weapon;
+};
+
 struct PlayerEntity
 {
-	bool		facingRight, isMoving, isFrozen, isAlive;
-	uint16_t	coinCount;
-	float		health, maxHealth;
-	Vec2		pos, dir = { 0, 0 };
+	bool			facingRight, isMoving, isFrozen, isAlive;
+	uint16_t		coinCount;
+	float			health, maxHealth;
+	Vec2			pos, dir = { 0, 0 };
 
-	uint16_t	reserveAmmo[Ammo::MAX_TYPES];
-	Weapon		primary, secondary;
+	uint16_t		reserveAmmo[Ammo::MAX_TYPES];
+	StartOptions	startOptions[StartOptions::MAX];
+	Weapon			primary, secondary;
 
-	TextPopUp	topPrompt, centrePrompt, bottomPrompt;
+	TextPopUp		topPrompt, centrePrompt, bottomPrompt;
 };
 
 namespace Item
@@ -305,6 +334,7 @@ struct Weapons
 	std::vector<StaticWeapon>	all;
 	std::vector<StaticWeapon*>	basic;
 	std::vector<StaticWeapon*>	fancy;
+	std::vector<StaticWeapon*>	start;
 };
 
 struct Stats
@@ -314,13 +344,16 @@ struct Stats
 				damageDealt, enemiesKilled;
 };
 
-//enum class GameState : uint8_t
-//{
-//	RUNNING, DEAD, START
-//};
+struct Menus
+{
+	Image						menuButton, charButton, backButton, deadButton;
+	Image						background[GameState::MAX]{};
+	std::vector<SimpleButton>	simpleButtons[GameState::MAX];
+};
 
 struct GameInfo
 {
+	GameState									state;
 	PlayerEntity								player;
 	Weapons										weapons;
 	std::vector<std::vector<uint16_t>>			map;
@@ -334,6 +367,7 @@ struct GameInfo
 	Sprites										sprites;
 	Misc										misc;
 	Stats										stats;
+	Menus										menus;
 	WindowInfo									window;
 };
 
@@ -343,6 +377,10 @@ std::vector<std::vector<uint16_t>>	initMap(GameInfo& game, uint32_t lvl);
 void	gameLogic(GameInfo& game);
 void	manageEntities(GameInfo& game);
 void	manageWeapons(GameInfo& game);
+
+void	selectCharacter(GameInfo& game, uint8_t	characterIndex);
+void	changeGameState(GameInfo& game, GameState gameState);
+void	initStartOptions(GameInfo& game);
 
 // spit out stuff
 void	spitOutItems(GameInfo& game, Vec2 pos, uint16_t type, uint16_t copies, uint16_t count = 1);
@@ -354,9 +392,17 @@ void	renderGrid(GameInfo& game);
 void	renderBlockingWalls(GameInfo& game);
 
 // init
+void	resetLevel(GameInfo& game);
 void	staticInit(GameInfo& game);
 void	respawn(GameInfo& game);
 void	nextLevel(GameInfo& game);
+
+void	initPlayerEntity(GameInfo& game);
+void	resetStats(GameInfo& game);
+
+// save/load
+void	saveGame(const GameInfo& game);
+void	loadGame(GameInfo& game);
 
 // tools
 uint32_t	tRand(uint32_t modulo);

@@ -50,15 +50,15 @@ void	renderEntities(GameInfo& game)
 	for (const DroppedWeapon& w : game.droppedWeapons)
 	{
 		Vec2	pos = {
-			Screen::size.x / 2 + (w.pos.x - game.player.pos.x) * Block::size.x - w.ptr->sprite.size.x / 2,
-			Screen::size.y / 2 + (w.pos.y - game.player.pos.y) * Block::size.y - w.ptr->sprite.size.y / 2
+			Screen::size.x / 2 + (w.pos.x - game.player.pos.x) * Block::size.x - w.ptr->_sprite.size.x / 2,
+			Screen::size.y / 2 + (w.pos.y - game.player.pos.y) * Block::size.y - w.ptr->_sprite.size.y / 2
 		};
 
 		if (pos.x + Item::size.x > 0 && pos.x - Item::size.x < Screen::size.x &&
 			pos.y + Item::size.y > 0 && pos.y - Item::size.y < Screen::size.y &&
 			DDA(game, { game.player.pos.x, game.player.pos.y + Player::eyesOffset }, w.pos) == true)
 		{
-			drawImage(pos, game.window, &w.ptr->sprite);
+			drawImage(pos, game.window, &w.ptr->_sprite);
 		}
 	}
 }
@@ -111,7 +111,7 @@ void	renderPlayer(GameInfo& game)
 	Image*	currentImage;
 
 	if (game.player.isMoving == true)
-		currentImage = &game.sprites.playerRunning[(game.misc.MS % 1000) / 125];
+		currentImage = &game.sprites.playerRunning[(game.misc.MS % 800) / 100];
 	else
 		currentImage = &game.sprites.playerStanding[(game.misc.MS % 1600) / 400];
 	drawImage(playerPos, game.window, currentImage, !game.player.facingRight);
@@ -120,12 +120,21 @@ void	renderPlayer(GameInfo& game)
 void	renderCrosshair(GameInfo& game)
 {
 	StaticWeapon*	ptr = game.player.primary.ptr;
+	Image*			image;
 
-	drawImage(
-		subtractVec2(game.misc.cursorPos, toVec2(Ammo::spriteSize, 0.5f)), 
-		game.window, 
-		ptr == nullptr ? &game.sprites.crosshairs[-1] : &game.sprites.crosshairs[ptr->ammoType]
-	);
+	if (game.state != GameState::PLAYING)
+	{
+		image = &game.sprites.crosshairs[-2];
+	}
+	else if (ptr == nullptr)
+	{
+		image = &game.sprites.crosshairs[-1];
+	}
+	else
+	{
+		image = &game.sprites.crosshairs[ptr->_ammoType];
+	}
+	drawImage(subtractVec2(game.misc.cursorPos, toVec2(image->size, 0.5f)), game.window, image);
 }
 
 void	renderUI(GameInfo& game)
@@ -143,7 +152,7 @@ void	renderUI(GameInfo& game)
 
 		if (w[i].ptr != nullptr)
 		{
-			drawImage({24, (float)posY + 8}, game.window, &w[i].ptr->spriteUI);
+			drawImage({24, (float)posY + 8}, game.window, &w[i].ptr->_spriteUI);
 		}
 	}
 	if (w[0].ptr != nullptr || w[1].ptr != nullptr)
@@ -162,11 +171,11 @@ void	renderUI(GameInfo& game)
 		drawString(f, game.window, { game.window.vram.x - 30.0f, posY }, s2);
 	}
 
-	drawString(fXL, game.window, { 10, 5 }, (w[0].ptr == nullptr) ? "0/0" : std::to_string(w[0].ammo) + "/" + std::to_string(game.player.reserveAmmo[w[0].ptr->ammoType]));
+	drawString(fXL, game.window, { 10, 5 }, (w[0].ptr == nullptr) ? "0/0" : std::to_string(w[0].ammo) + "/" + std::to_string(game.player.reserveAmmo[w[0].ptr->_ammoType]));
 
 	drawString(fXL, game.window, { 8.5, 160 }, "\34");
 	drawString(fXL, game.window, { 25,  160 }, std::to_string((int)game.player.health));
-	drawString(fXL, game.window, { 10,  185 }, "$");
+	drawString(fXL, game.window, { 9,   185 }, "$");
 	drawString(fXL, game.window, { 25,  185 }, std::to_string(game.player.coinCount));
 }
 
@@ -191,7 +200,7 @@ void	renderDeathStat(GameInfo& game, std::string stat, std::string val, int i, f
 	float	y = game.window.vram.y - 130.0f - 15.0f * i;
 
 	drawString(game.sprites.font, game.window, { x[0], y }, stat, transparency);
-	drawString(game.sprites.font, game.window, { x[1], y }, val, Font::Align::RIGHT, transparency);
+	drawString(game.sprites.font, game.window, { x[1], y }, val, Font::Align::RIGHT, Font::Align::TOP, transparency);
 }
 
 std::string	msToString(int64_t MS)
@@ -207,20 +216,71 @@ void	renderDeathScreen(GameInfo& game)
 	Stats&		stats = game.stats;
 	float		transparency = std::min<float>(1.0f, (float)(game.misc.MS - stats.timeOfDeath) / game.sprites.overlays[Sprites::DEATH]._maxDuration) * 127.0f;
 
-	drawString(game.sprites.fontLarge, game.window, { game.window.vram.x / 2.0f, game.window.vram.y - 130.0f }, "Stats:", Font::Align::CENTRE, transparency);
+	drawString(game.sprites.fontLarge, game.window, { game.window.vram.x / 2.0f, game.window.vram.y - 130.0f }, "Stats:", Font::Align::CENTRE, Font::Align::TOP, transparency);
 	
 	renderDeathStat(game, "Time alive:",      msToString(game.stats.timeOfDeath - game.stats.startTime), 1, transparency);
 	renderDeathStat(game, "Coins collected:", std::to_string(stats.coinsCollected),                      2, transparency);
 	renderDeathStat(game, "Shots fired:",     std::to_string(stats.shotsFired),                          3, transparency);
 	renderDeathStat(game, "Damage dealt:",    std::to_string(stats.damageDealt),                         4, transparency);
 	renderDeathStat(game, "Enemies Killed:",  std::to_string(stats.enemiesKilled),                       5, transparency);
+}
 
-	drawString(game.sprites.font, game.window, { game.window.vram.x / 2.0f, 10.0f }, "Press [R] to restart", Font::Align::CENTRE, transparency);
+void	renderCharacterSelect(GameInfo& game)
+{
+	Font&	f = game.sprites.font;
+	Font&	fXL = game.sprites.fontLarge;
+	Image&	charButton = game.menus.charButton;
+	Vec2	halfScreen = toVec2(game.window.vram, 0.5);
+	float	offsetBorder = 5.0f;
+	float	offsetY = 20.0f;
+	Vec2	posArr[4] = {
+		{ halfScreen.x - offsetBorder - charButton.size.x, halfScreen.y - offsetY + offsetBorder },
+		{ halfScreen.x + offsetBorder,                     halfScreen.y - offsetY + offsetBorder },
+		{ halfScreen.x - offsetBorder - charButton.size.x, halfScreen.y - offsetY - offsetBorder - charButton.size.y },
+		{ halfScreen.x + offsetBorder,                     halfScreen.y - offsetY - offsetBorder - charButton.size.y }
+	};
+	Vec2	namePos = { charButton.size.x / 2, charButton.size.y - 20 };
+	Vec2	textPos = { 25, charButton.size.y - 50 };
+	float	textOffset = 13;
+	
+	for (int i = 0; i < 4; i++)
+	{
+		StaticWeapon*	weapon = game.player.startOptions[i].weapon;
+		Vec2	imagePos = addVec2(posArr[i], { (float)charButton.size.x - weapon->_spriteUI.size.x - 30, 30 });
+
+		drawString(fXL, game.window, addVec2(posArr[i], namePos), game.player.startOptions[i].name, Font::Align::CENTRE, Font::Align::CENTRE);
+		drawString(f, game.window, addVec2(posArr[i], textPos), "WEAPON:\t " + weapon->_name);
+		drawString(f, game.window, addVec2(posArr[i], { textPos.x, textPos.y - textOffset     }), "DAMAGE:\t " + std::to_string((int)weapon->_damage * weapon->_pellets));
+		drawString(f, game.window, addVec2(posArr[i], { textPos.x, textPos.y - textOffset * 2 }), "FIRE RATE:\t "    + std::to_string((int)weapon->_fireRate) + " rpm");
+		drawString(f, game.window, addVec2(posArr[i], { textPos.x, textPos.y - textOffset * 3 }), "CAPACITY:\t "   + std::to_string((int)weapon->_capacity));
+		drawImage(imagePos, game.window, &weapon->_spriteUI);
+	}
+}
+
+void	renderMenu(GameInfo& game)
+{
+	if (game.state != GameState::PAUSED)
+	{
+		drawImage({ 0, 0 }, game.window, &game.menus.background[game.state]);
+	}
+	for (SimpleButton& b : game.menus.simpleButtons[game.state])
+	{
+		b.Render(game.window);
+	}
+	if (game.state == GameState::CHARACTER_SELECT)
+	{
+		renderCharacterSelect(game);
+	}
+	if (game.state == GameState::DEAD)
+	{
+		renderDeathScreen(game);
+	}
+	renderCrosshair(game);
 }
 
 void	render(GameInfo& game)
 {
-	if (game.player.isAlive == true)
+	if (game.state == GameState::PLAYING || game.state == GameState::PAUSED)
 	{
 		renderGrid(game);
 		renderEntities(game);
@@ -232,14 +292,11 @@ void	render(GameInfo& game)
 		renderCrosshair(game);
 		renderUI(game);
 		manageTextPrompts(game);
+		renderOverlays(game);
 	}
-
-	renderOverlays(game);
-
-	if (game.player.isAlive == false)
+	if (game.state != GameState::PLAYING)
 	{
-		renderDeathScreen(game);
+		renderMenu(game);
 	}
-
 	renderFrame();
 }

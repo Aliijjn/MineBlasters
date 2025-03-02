@@ -1,0 +1,26 @@
+Level: 2
+Seed: 578708
+
+*Player Stats*
+Coins: 1000
+HP: 100
+Max HP: 100
+
+*Weapons*
+Primary index: 8
+Primary ammo: 1
+Secondary index: -1
+Secondary ammo: 0
+
+*Reserve Ammo*
+Light: 10
+Medium: 10
+Large: 7
+Shotgun: 10
+
+*Stats*
+Ticks alive: 23326
+Coins collected: 0
+Shots fired: 3
+Damage dealt: 360
+Enemies killed: 2
