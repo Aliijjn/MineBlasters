@@ -1,6 +1,6 @@
 # MineBlasters 🧨⛏️
 
-Welcome to MineBlasters, my attempt at making a full, polished 2D game. I've been working on this project for a month (since 15-01-2025)
+Welcome to MineBlasters, my attempt at making a full, polished 2D game. I've been working on this project since 15-01-2025
 
 ## What I've learned from this project: ✅
 - How to procedurally generate levels
